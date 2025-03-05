@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coffee Research Assistant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f5f0;
+        }
+        header {
+            background-color: #5d4037;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        h1 {
+            margin: 0;
+        }
+        .paper-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .paper-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .paper-title {
+            color: #5d4037;
+            margin-top: 0;
+        }
+        .paper-meta {
+            color: #777;
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #795548;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        .btn:hover {
+            background-color: #5d4037;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 50px;
+            background-color: white;
+            border-radius: 8px;
+        }
+        .process-btn {
+            background-color: #4CAF50;
+            margin-top: 20px;
+        }
+        .process-btn:hover {
+            background-color: #388E3C;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Coffee Research Assistant</h1>
+        <p>Daily summaries of coffee brewing research papers</p>
+    </header>
+    
+    <div>
+        <form action="/process-now" method="post" style="text-align: center; margin-bottom: 30px;">
+            <button type="submit" class="btn process-btn">Process New Paper Now</button>
+        </form>
+    </div>
+    
+    {% if papers %}
+        {% for paper in papers|reverse %}
+            <div class="paper-card">
+                <h2 class="paper-title">{{ paper.title }}</h2>
+                <div class="paper-meta">
+                    <span>Authors: {{ paper.authors }}</span> | 
+                    <span>Year: {{ paper.year }}</span> | 
+                    <span>Processed: {{ paper.processed_date }}</span>
+                </div>
+                <p>{{ paper.abstract[:200] }}...</p>
+                <a href="/paper/{{ loop.index0 }}" class="btn">View Summary & Brewing Advice</a>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <h2>No papers processed yet</h2>
+            <p>Click the "Process New Paper Now" button to get your first coffee research summary.</p>
+        </div>
+    {% endif %}
+</body>
+</html>

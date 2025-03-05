@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Coffee Research Paper</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f5f0;
+        }
+        header {
+            background-color: #5d4037;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .paper-container {
+            background-color: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .paper-title {
+            color: #5d4037;
+            margin-top: 0;
+        }
+        .paper-meta {
+            color: #777;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .abstract {
+            background-color: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+        }
+        .summary {
+            white-space: pre-wrap;
+            line-height: 1.8;
+        }
+        .summary h3 {
+            color: #5d4037;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-top: 30px;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        .summary ul {
+            padding-left: 25px;
+            margin-bottom: 25px;
+        }
+        .summary li {
+            margin-bottom: 12px;
+        }
+        .summary strong {
+            color: #5d4037;
+            font-weight: 600;
+        }
+        .btn {
+            display: inline-block;
+            background-color: #795548;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        .btn:hover {
+            background-color: #5d4037;
+        }
+        .back-link {
+            margin-bottom: 20px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Coffee Research Assistant</h1>
+        <p>Daily summaries of coffee brewing research papers</p>
+    </header>
+    
+    <a href="/" class="btn back-link">← Back to All Papers</a>
+    
+    <div class="paper-container">
+        <h1 class="paper-title">{{ paper.title }}</h1>
+        <div class="paper-meta">
+            <p><strong>Authors:</strong> {{ paper.authors }}</p>
+            <p><strong>Year:</strong> {{ paper.year }}</p>
+            <p><strong>Citations:</strong> {{ paper.citations }}</p>
+            <p><strong>Processed Date:</strong> {{ paper.processed_date }}</p>
+            {% if paper.url %}
+                <p><strong>Source:</strong> <a href="{{ paper.url }}" target="_blank">Original Paper</a></p>
+            {% endif %}
+        </div>
+        
+        <h2>Abstract</h2>
+        <div class="abstract">
+            <p>{{ paper.abstract }}</p>
+        </div>
+        
+        <h2>Summary & Brewing Advice</h2>
+        <div class="summary">
+            {% set formatted_summary = paper.summary | replace("###", "<h3>") | replace("##", "<h3>") | replace("</h3>", "</h3>") %}
+            {% set formatted_summary = formatted_summary | replace("**", "<strong>") | replace("</strong>", "</strong>") %}
+            {% set formatted_summary = formatted_summary | replace("- ", "• ") %}
+            {{ formatted_summary | safe }}
+        </div>
+    </div>
+</body>
+</html>
