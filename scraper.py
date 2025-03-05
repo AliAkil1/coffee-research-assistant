@@ -16,6 +16,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
 import uvicorn
 import re
 import threading
+from llm_utils import summarize_paper
 
 # Load environment variables
 load_dotenv()
@@ -57,6 +58,10 @@ def search_coffee_papers(query="coffee brewing", num_results=5, max_retries=3):
     # Try to search with retries
     for attempt in range(max_retries):
         try:
+            # Configure scholarly timeout
+            scholarly.set_timeout(30)
+            
+            # Use a simple search without proxy
             search_query = scholarly.search_pubs(query)
             papers = []
             
@@ -89,35 +94,42 @@ def search_coffee_papers(query="coffee brewing", num_results=5, max_retries=3):
                         "url": paper.get("pub_url", ""),
                         "citations": paper.get("num_citations", 0)
                     })
+                    
+                    # Add a small delay between paper fetches
+                    time.sleep(3)
+                    
                 except StopIteration:
                     break
+                except Exception as e:
+                    print(f"Error fetching paper {i}: {str(e)}")
+                    continue
+            
+            # If we found any papers, return them
+            if papers:
+                return papers
             
             # If we didn't find any papers, use fallback data
-            if not papers:
-                print("No papers found. Using fallback data.")
-                return get_fallback_papers()
-                
-            return papers
+            print("No papers found. Using fallback data.")
+            return get_fallback_papers()
             
         except MaxTriesExceededException as e:
             print(f"Google Scholar rate limit hit (attempt {attempt+1}/{max_retries}): {str(e)}")
             if attempt < max_retries - 1:
-                # Wait longer between retries
-                wait_time = (attempt + 1) * 30
+                wait_time = 60 * (attempt + 1)  # Linear backoff: 60s, 120s, 180s
                 print(f"Waiting {wait_time} seconds before retrying...")
                 time.sleep(wait_time)
             else:
                 print("Max retries exceeded. Using fallback data.")
-                # Return fallback data if all retries fail
                 return get_fallback_papers()
         except Exception as e:
             print(f"Unexpected error during paper search (attempt {attempt+1}/{max_retries}): {str(e)}")
             if attempt < max_retries - 1:
-                time.sleep(10)
+                time.sleep(30)  # Simple 30-second delay between retries
             else:
                 print("Max retries exceeded. Using fallback data.")
-                # Return fallback data if all retries fail
                 return get_fallback_papers()
+    
+    return get_fallback_papers()
 
 def clean_abstract(abstract):
     """Clean up an abstract to make it more readable"""
@@ -415,10 +427,10 @@ def process_daily_paper():
     # Get paper content
     content = get_paper_content(new_paper["url"])
     
-    # Summarize with DeepSeek
-    summary = summarize_with_deepseek(
-        content=new_paper["abstract"] + "\n\n" + content,
-        paper_title=new_paper["title"]
+    # Summarize with Langchain
+    summary = summarize_paper(
+        title=new_paper["title"],
+        content=new_paper["abstract"] + "\n\n" + content
     )
     
     # Save the results
@@ -785,19 +797,23 @@ def setup_templates():
 
 def schedule_daily_job():
     """Schedule the daily paper processing job"""
-    # Start the scheduler in a separate thread
-    def run_scheduler():
-        schedule.every().day.at("10:00").do(process_daily_paper)
-        
-        # Also run it immediately for testing
+    try:
+        # Run initial paper processing
         process_daily_paper()
         
+        # Schedule daily runs
+        schedule.every().day.at("10:00").do(process_daily_paper)
+        
         while True:
-            schedule.run_pending()
-            time.sleep(60)
-    
-    scheduler_thread = threading.Thread(target=run_scheduler, daemon=True)
-    scheduler_thread.start()
+            try:
+                schedule.run_pending()
+                time.sleep(60)
+            except Exception as e:
+                print(f"Error in scheduler loop: {str(e)}")
+                time.sleep(60)  # Wait a minute before retrying
+                continue
+    except Exception as e:
+        print(f"Fatal error in scheduler: {str(e)}")
 
 def main():
     """Main entry point for the application"""
@@ -810,8 +826,9 @@ def main():
     # Update existing abstracts to ensure they are complete
     update_existing_abstracts()
     
-    # Schedule the daily paper processing
-    schedule_daily_job()
+    # Start the scheduler in a daemon thread
+    scheduler_thread = threading.Thread(target=schedule_daily_job, daemon=True)
+    scheduler_thread.start()
     
     # Start the FastAPI server
     uvicorn.run(app, host="0.0.0.0", port=8080)
@@ -820,11 +837,9 @@ if __name__ == "__main__":
     # Update existing abstracts to fix formatting issues
     update_existing_abstracts()
     
-    # Process a new paper
-    process_daily_paper()
-    
-    # Schedule daily paper processing
-    schedule_daily_job()
+    # Start the scheduler in a daemon thread
+    scheduler_thread = threading.Thread(target=schedule_daily_job, daemon=True)
+    scheduler_thread.start()
     
     # Start the FastAPI server
     uvicorn.run(app, host="0.0.0.0", port=8080)
