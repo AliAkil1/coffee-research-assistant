@@ -25,7 +25,7 @@ A web application that automatically discovers, analyzes, and summarizes academi
 
 1. Clone this repository:
 ```bash
-git clone https://github.com/yourusername/coffee-research-assistant.git
+git clone https://github.com/AliAkil1/coffee-research-assistant.git
 cd coffee-research-assistant
 ```
 
@@ -167,7 +167,7 @@ MIT License - See [LICENSE](LICENSE) for details
 
 ## Author
 
-Your Name ([@yourusername](https://github.com/yourusername))
+Ali Akil ([@AliAkil1](https://github.com/AliAkil1))
 
 ## Support
 
